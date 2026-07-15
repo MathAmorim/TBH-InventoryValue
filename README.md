@@ -34,6 +34,9 @@ Requires Python to be installed on your machine.
 
 Once the app is open:
 1. Click the **Browse** button in the header and select your game's active save file: `SaveFile_Live.es3`.
+   - **How to find it easily**: Copy and paste the following path into the Windows file dialog address bar and press Enter:
+     `%USERPROFILE%\AppData\LocalLow\TesseractStudio\TaskbarHero\`
+     Then select the `SaveFile_Live.es3` file.
    - **Typical Windows Path**: `C:\Users\<username>\AppData\LocalLow\TesseractStudio\TaskbarHero\SaveFile_Live.es3`
 2. Select your preferred currency (USD, BRL, EUR, etc.) from the dropdown.
 
