@@ -1,7 +1,16 @@
 import os
+import sys
 import json
 import time
 from typing import Any, Dict, List, Tuple
+
+def resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView,
@@ -90,10 +99,10 @@ class MainWindow(QMainWindow):
         self.resize(1100, 800)
 
         # Core systems
-        self.parser = SaveParser()
+        self.parser = SaveParser(resource_path("items.json"))
         self.history_mgr = HistoryManager()
         self.rate_mgr = ExchangeRateManager()
-        self.sprite_loader = SpriteLoader()
+        self.sprite_loader = SpriteLoader(resource_path("id_to_sprite.json"))
 
         # Session properties
         self.save_file_path = ""

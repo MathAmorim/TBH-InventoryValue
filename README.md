@@ -13,7 +13,7 @@ You can run the application in two ways:
 No Python installation is required for this option.
 1. Navigate to the [dist/](dist) directory inside this repository.
 2. Run [TaskBarHero-InventoryValue.exe](dist/TaskBarHero-InventoryValue.exe).
-   - *Note: Ensure the executable remains in the project directory (or that `items.json`, `id_to_sprite.json`, and the `cache_sprites/` folder are located in the same directory as the executable so it can load item databases and sprites).*
+   - *Note: `items.json` and `id_to_sprite.json` are already bundled directly inside the executable. The `cache_sprites/` folder is optional; if missing, the app will automatically recreate it and download required sprite assets on demand.*
 
 ### Option B: Run from Source via Batch Script (`start.bat`)
 Requires Python to be installed on your machine.
