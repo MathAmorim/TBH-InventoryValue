@@ -3,4 +3,5 @@ __pycache__/
 config.json
 history.json
 market_cache.json
-
+build/
+*.spec
