@@ -158,9 +158,16 @@ class SaveParser:
             name = name_dict.get("en-US", name_dict.get("en", f"Item {item_key}"))
             level = db_info.get("level")
 
+            # Construct the Steam Market hash name for equipment items
+            if level is not None:
+                market_name = f"{name} ({grade.capitalize()}) A"
+            else:
+                market_name = name
+
             parsed_inventory.append({
                 "item_key": item_key,
                 "name": name,
+                "market_name": market_name,
                 "grade": grade,
                 "level": level if level is not None else 1,
                 "quantity": len(items_list),

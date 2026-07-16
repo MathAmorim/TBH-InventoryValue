@@ -530,7 +530,7 @@ class MainWindow(QMainWindow):
         seen = set()
         item_names = []
         for item in sorted_by_rarity:
-            name = item["name"]
+            name = item.get("market_name", item["name"])
             if name not in seen:
                 seen.add(name)
                 item_names.append(name)
@@ -569,7 +569,7 @@ class MainWindow(QMainWindow):
         exchange_rate = self.rate_mgr.rates.get(self.active_currency, currency_info["fallback_rate"])
 
         for item in self.current_parsed_inventory:
-            price_str = self.resolved_prices.get(item["name"], "N/A")
+            price_str = self.resolved_prices.get(item.get("market_name", item["name"]), "N/A")
             num_price = parse_price_string(price_str)
             item["unit_price_val"] = num_price
             item["total_price_val"] = num_price * item["quantity"]
