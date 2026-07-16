@@ -93,7 +93,13 @@ class SteamPriceWorker(QThread):
 
     def __init__(self, item_names: List[str], currency_code: str, cache_file_path: str = "market_cache.json"):
         super().__init__()
-        self.item_names = list(set(item_names))  # Unique item names
+        # Deduplicate while preserving order
+        self.item_names = []
+        seen = set()
+        for name in item_names:
+            if name not in seen:
+                seen.add(name)
+                self.item_names.append(name)
         self.currency_code = currency_code
         self.cache_file_path = cache_file_path
         self.cache: Dict[str, Any] = {}

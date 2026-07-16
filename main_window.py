@@ -519,8 +519,21 @@ class MainWindow(QMainWindow):
             self.update_overview(0.0)
             return
 
-        # Extract item names to query prices
-        item_names = [item["name"] for item in self.current_parsed_inventory]
+        # Prioritize querying the rarest items first (by quality grade, then by level)
+        sorted_by_rarity = sorted(
+            self.current_parsed_inventory,
+            key=lambda x: (GRADE_ORDER.get(x["grade"], 0), x.get("level", 1)),
+            reverse=True
+        )
+        
+        # Extract names preserving the rarity priority order
+        seen = set()
+        item_names = []
+        for item in sorted_by_rarity:
+            name = item["name"]
+            if name not in seen:
+                seen.add(name)
+                item_names.append(name)
         
         # Start background worker thread
         self.is_fetching = True
