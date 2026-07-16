@@ -5,3 +5,4 @@ history.json
 market_cache.json
 build/
 *.spec
+steam_market.log

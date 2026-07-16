@@ -145,6 +145,16 @@ class SteamPriceWorker(QThread):
         }
         self.save_cache()
 
+    def log(self, text: str) -> None:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        log_line = f"[{timestamp}] [Thread-{id(self)}] {text}\n"
+        print(log_line.strip())
+        try:
+            with open("steam_market.log", "a", encoding="utf-8") as f:
+                f.write(log_line)
+        except Exception as e:
+            print(f"[ERROR] Failed to write to steam_market.log: {e}")
+
     def run(self) -> None:
         results = {}
         total = len(self.item_names)
@@ -152,10 +162,13 @@ class SteamPriceWorker(QThread):
 
         rate_limit_active = False
 
+        self.log(f"Starting price sync run for {total} items in currency {self.currency_code}...")
+
         for idx, name in enumerate(self.item_names):
             # Check cache first (enforcing 12-hour age limit)
             cached = self.get_cached_price(name)
             if cached is not None:
+                self.log(f"CACHE HIT: '{name}' -> '{cached}'")
                 results[name] = cached
                 self.progress.emit(idx + 1, total, name, cached)
                 continue
@@ -163,6 +176,7 @@ class SteamPriceWorker(QThread):
             # If rate limit was hit, use stale cache price if available, otherwise "N/A"
             if rate_limit_active:
                 stale_price = self.get_cached_price(name, ignore_age=True) or "N/A"
+                self.log(f"SKIPPED (Rate limit active): '{name}' -> using fallback '{stale_price}'")
                 results[name] = stale_price
                 self.progress.emit(idx + 1, total, name, stale_price)
                 continue
@@ -170,9 +184,10 @@ class SteamPriceWorker(QThread):
             # Fetch from Steam API
             price_str = "N/A"
             network_called = False
+            encoded_name = urllib.parse.quote(name)
+            url = f"https://steamcommunity.com/market/priceoverview/?appid=3678970&currency={currency_id}&market_hash_name={encoded_name}"
+            self.log(f"NET REQ: '{name}' -> URL: '{url}'")
             try:
-                encoded_name = urllib.parse.quote(name)
-                url = f"https://steamcommunity.com/market/priceoverview/?appid=3678970&currency={currency_id}&market_hash_name={encoded_name}"
                 req = urllib.request.Request(
                     url,
                     headers={
@@ -184,12 +199,20 @@ class SteamPriceWorker(QThread):
                     network_called = True
                     if data.get("success"):
                         price_str = data.get("lowest_price", data.get("median_price", "N/A"))
+                        self.log(f"NET SUCCESS: '{name}' -> '{price_str}'")
+                    else:
+                        self.log(f"NET RESPONSE FAILED (success=false) for '{name}': {data}")
             except Exception as e:
                 price_str = "N/A"
-                if hasattr(e, 'code') and getattr(e, 'code') == 429:
+                err_msg = str(e)
+                code = getattr(e, 'code', None)
+                if code == 429:
                     rate_limit_active = True
                     # Fallback immediately to stale cache if available
                     price_str = self.get_cached_price(name, ignore_age=True) or "N/A"
+                    self.log(f"NET RATE-LIMIT (429) hit for '{name}'. Activating rate-limit mode. Using fallback '{price_str}'. Details: {err_msg}")
+                else:
+                    self.log(f"NET ERROR for '{name}'. Details: {err_msg} (code: {code})")
 
             # Cache the result only if it's a successful network lookup or a non-rate-limit "N/A"
             if not rate_limit_active or price_str != "N/A":
@@ -202,4 +225,5 @@ class SteamPriceWorker(QThread):
             if network_called and not rate_limit_active:
                 time.sleep(1.2)
 
+        self.log(f"Finished price sync run. Rate limit hit: {rate_limit_active}")
         self.finished.emit(results, rate_limit_active)
